@@ -23,13 +23,17 @@ Here is the data provided from the Simulator to the C++ Program
 
 
 ## Design Details
-1. The car drives according to the speed limit: The car tries to maintain the speed of `refVel` in the `main()` function. The car is accelerated only if the current velocity is less than to 49.2mph and is done in incremental value of 0.5 in every cycle.
+1. **The car drives according to the speed limit:** The car tries to maintain the speed of `refVel` in the `main()` function. The car is accelerated only if the current velocity is less than to 49.2mph and is done in incremental value of 0.5 in every cycle.
 
-2. Max Acceleration and Jerk are not Exceeded: The change in velocity per cycle was decided empirically and set to 0.5. For lower values, the lane change becomes slow and for the higher vlaue, jerk exceeds the maximum allowed value of 10m/s^2 at a few places along the track. The car is not allowed to change lane if it has already changed lane in one of the last 5 cycles (ensured by variable `numLaneShifts`). This prevents sudden jerk due to consecutive lane changes in rapid succession.
+2. **Max Acceleration and Jerk are not Exceeded:** The change in velocity per cycle was decided empirically and set to 0.5. For lower values, the lane change becomes slow and for the higher vlaue, jerk exceeds the maximum allowed value of 10m/s^2 at a few places along the track. The car is not allowed to change lane if it has already changed lane in one of the last 5 cycles (ensured by variable `numLaneShifts`). This prevents sudden jerk due to consecutive lane changes in rapid succession.
 
-3. Car does not have collisions: The collsions are avoided by using the safe distance variables `minFrontDist` and `minRearDist`. The car is decelerated if the distance with front vehicle gets lower than the safe distance with 0.35 per cycle. If the distance is too less, the vehicle is decelerated at faster rate of 0.7 per cycle. Similarly, the vehicles are continously monitored to check if a lane change will be feasible before acting upon the same. The car is able to smoothly change lanes when it makes sense to do so, such as when behind a slower moving car and an adjacent lane is clear of other traffic (ensured by variables `leftLaneClear` and `rightLaneClear`).
+3. **Car does not have collisions:** The collsions are avoided by using the safe distance variables `minFrontDist` and `minRearDist`. The car is decelerated if the distance with front vehicle gets lower than the safe distance with 0.35 per cycle. If the distance is too less, the vehicle is decelerated at faster rate of 0.7 per cycle.
 
-4. Path Generation: To ensure smooth trajectory
+4. **The car stays in its lane, except for the time between changing lanes:** The car doesn't spend more than a 3 second length out side the lane lanes during changing lanes, and every other time the car stays inside one of the 3 lanes on the right hand side of the road. This is ensured by not decelerating too slowly. It was found that decelerating at less than 0.4 units per cycle leads to too slow lane change.
+
+5. **The car is able to change lanes:** The vehicles on the highway are are continously monitored using sensor fusion data to check if a lane change will be feasible before acting upon the same. The car is able to smoothly change lanes when it makes sense to do so, such as when behind a slower moving car and an adjacent lane is clear of other traffic (ensured by variables `leftLaneClear` and `rightLaneClear`).
+
+6. **Path Generation:** To ensure smooth trajectory
     * a list of evenly spaced waypoint (x, y) is created
     * the previous path end points are added to the list (this is to ensure that the new path is tangent to the current path)
    * A path made up of (x,y) points that the car will visit is created by adding evenly spaced (every 30m)  points in Frenet coordinate.
