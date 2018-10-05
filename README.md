@@ -21,6 +21,27 @@ The highway's waypoints loop around so the frenet s value, distance along the ro
 
 Here is the data provided from the Simulator to the C++ Program
 
+
+## Design Details
+1. The car drives according to the speed limit: The car tries to maintain the speed of `refVel` in the `main()` function. The car is accelerated only if the current velocity is less than to 49.2mph and is done in incremental value of 0.5 in every cycle.
+
+2. Max Acceleration and Jerk are not Exceeded: The change in velocity per cycle was decided empirically and set to 0.5. For lower values, the lane change becomes slow and for the higher vlaue, jerk exceeds the maximum allowed value of 10m/s^2 at a few places along the track. The car is not allowed to change lane if it has already changed lane in one of the last 5 cycles (ensured by variable `numLaneShifts`). This prevents sudden jerk due to consecutive lane changes in rapid succession.
+
+3. Car does not have collisions: The collsions are avoided by using the safe distance variables `minFrontDist` and `minRearDist`. The car is decelerated if the distance with front vehicle gets lower than the safe distance with 0.35 per cycle. If the distance is too less, the vehicle is decelerated at faster rate of 0.7 per cycle. Similarly, the vehicles are continously monitored to check if a lane change will be feasible before acting upon the same. The car is able to smoothly change lanes when it makes sense to do so, such as when behind a slower moving car and an adjacent lane is clear of other traffic (ensured by variables `leftLaneClear` and `rightLaneClear`).
+
+4. Path Generation: To ensure smooth trajectory
+    * a list of evenly spaced waypoint (x, y) is created
+    * the previous path end points are added to the list (this is to ensure that the new path is tangent to the current path)
+   * A path made up of (x,y) points that the car will visit is created by adding evenly spaced (every 30m)  points in Frenet coordinate.
+   * Using `spline()` a smooth curve is generated for traversal so that we travel at our reference speed, `refVel`
+   * We output 50 waypoints from the spline function (along with previous path points)
+
+## Other Details
+
+1. The car uses a perfect controller and will visit every (x,y) point it recieves in the list every .02 seconds. The units for the (x,y) points are in meters and the spacing of the points determines the speed of the car. The vector going from a point to the next point in the list dictates the angle of the car. Acceleration both in the tangential and normal directions is measured along with the jerk, the rate of change of total Acceleration. The (x,y) point paths that the planner recieves should not have a total acceleration that goes over 10 m/s^2, also the jerk should not go over 50 m/s^3. (NOTE: As this is BETA, these requirements might change. Also currently jerk is over a .02 second interval, it would probably be better to average total acceleration over 1 second and measure jerk from that.
+
+2. There will be some latency between the simulator running and the path planner returning a path, with optimized code usually its not very long maybe just 1-3 time steps. During this delay the simulator will continue using points that it was last given, because of this its a good idea to store the last points you have used so you can have a smooth transition. previous_path_x, and previous_path_y can be helpful for this transition since they show the last points given to the simulator controller with the processed points already removed. You would either return a path that extends this previous path or make sure to create a new path that has a smooth transition with this last path.
+
 #### Main car's localization Data (No Noise)
 
 ["x"] The car's x position in map coordinates
@@ -54,11 +75,6 @@ the path has processed since last time.
 
 ["sensor_fusion"] A 2d vector of cars and then that car's [car's unique ID, car's x position in map coordinates, car's y position in map coordinates, car's x velocity in m/s, car's y velocity in m/s, car's s position in frenet coordinates, car's d position in frenet coordinates. 
 
-## Details
-
-1. The car uses a perfect controller and will visit every (x,y) point it recieves in the list every .02 seconds. The units for the (x,y) points are in meters and the spacing of the points determines the speed of the car. The vector going from a point to the next point in the list dictates the angle of the car. Acceleration both in the tangential and normal directions is measured along with the jerk, the rate of change of total Acceleration. The (x,y) point paths that the planner recieves should not have a total acceleration that goes over 10 m/s^2, also the jerk should not go over 50 m/s^3. (NOTE: As this is BETA, these requirements might change. Also currently jerk is over a .02 second interval, it would probably be better to average total acceleration over 1 second and measure jerk from that.
-
-2. There will be some latency between the simulator running and the path planner returning a path, with optimized code usually its not very long maybe just 1-3 time steps. During this delay the simulator will continue using points that it was last given, because of this its a good idea to store the last points you have used so you can have a smooth transition. previous_path_x, and previous_path_y can be helpful for this transition since they show the last points given to the simulator controller with the processed points already removed. You would either return a path that extends this previous path or make sure to create a new path that has a smooth transition with this last path.
 
 ## Tips
 
